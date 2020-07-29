@@ -35,9 +35,27 @@ class ProductViewSet(BaseRecipeAttrViewSet):
     queryset = Product.objects.all()
     serializer_class = serializers.ProductSerializer
 
-class CategoryViewSet(BaseRecipeAttrViewSet):
+class CategoryViewSet(viewsets.ModelViewSet):
     """Manage category in the database"""
     queryset = Category.objects.all()
-    serializer_class = serializers.CategorySerializer
+    serializer_class = serializers.CategorySerializer    
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    def get_queryset(self):
+        """Return objects for the current authenticated user only"""
+        return self.queryset.filter(
+            user=self.request.user
+        )
+    def get_serializer_class(self):
+        """Return appropriate serializer class"""
+        if self.action == 'retrieve':
+            return serializers.CategoryDetailSerializer
+        # elif self.action == 'upload_image':
+        #     return serializers.RecipeImageSerializer
+
+        return self.serializer_class
+    def perform_create(self, serializer):
+        """Create a new category"""
+        serializer.save(user=self.request.user)
     
 

@@ -56,6 +56,7 @@ class Category(models.Model):
         ,null=True, blank=True,
         on_delete=models.CASCADE
     )
+    products = models.ManyToManyField('Product')
     
 
     def __str__(self):
@@ -65,12 +66,7 @@ class Product(models.Model):
     """Product existing in a category"""
     name = models.CharField(max_length=255)
     description = models.CharField(max_length=2000)
-    # image = models.ImageField(null=True, upload_to=product_image_file_path)
-    category = models.ForeignKey(
-        Category
-        ,null=False
-        ,on_delete=models.CASCADE
-    )
+    image = models.ImageField(null=True, upload_to=product_image_file_path)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE

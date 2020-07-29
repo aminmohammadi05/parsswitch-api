@@ -1,3 +1,4 @@
+from unittest.mock import patch
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from core import models
@@ -50,16 +51,10 @@ class ModelTests(TestCase):
     def test_product_str(self):
         """Test the product string respresentation"""
         user = sample_user()
-        category = models.Category.objects.create(
-            user=user,
-            name='HV',
-            persian_title='HV'
-        )
         product = models.Product.objects.create(
             user=user,
             name='FP',
-            description='description',
-            category=category
+            description='description'
         )
 
         self.assertEqual(str(product), product.name)
@@ -74,12 +69,12 @@ class ModelTests(TestCase):
 
         self.assertEqual(str(category), category.name)
 
-    # @patch('uuid.uuid4')
-    # def test_product_file_name_uuid(self, mock_uuid):
-    #     """Test that image is saved in the correct location"""
-    #     uuid = 'test-uuid'
-    #     mock_uuid.return_value = uuid
-    #     file_path = models.product_image_file_path(None, 'myimage.jpg')
+    @patch('uuid.uuid4')
+    def test_product_file_name_uuid(self, mock_uuid):
+        """Test that image is saved in the correct location"""
+        uuid = 'test-uuid'
+        mock_uuid.return_value = uuid
+        file_path = models.product_image_file_path(None, 'myimage.jpg')
 
-    #     exp_path = f'uploads/product/{uuid}.jpg'
-    #     self.assertEqual(file_path, exp_path)
+        exp_path = f'uploads/product/{uuid}.jpg'
+        self.assertEqual(file_path, exp_path)

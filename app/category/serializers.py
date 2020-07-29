@@ -9,7 +9,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ('id', 'name', 'description', 'category')
+        fields = ('id', 'name', 'description')
         read_only_fields = ('id',)
 
 
@@ -28,16 +28,20 @@ class ProductSerializer(serializers.ModelSerializer):
 #         read_only_fields = ('id',)
 class CategorySerializer(serializers.ModelSerializer):
     """Serialize a category"""
+    products = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Product.objects.all()
+    )
     class Meta:
         model = Category
         fields = (
-            'id', 'name', 'persian_title', 'parent_category'
+            'id', 'name', 'persian_title', 'parent_category', 'products'
         )
         read_only_fields = ('id',)
 
-# class CategoryDetailSerializer(CategorySerializer):
-#     """Serialize a category detail"""
-#     products = ProductSerializer(many=True, read_only=True)
+class CategoryDetailSerializer(CategorySerializer):
+    """Serialize a category detail"""
+    products = ProductSerializer(many=True, read_only=True)
 
 
 # class ProductImageSerializer(serializers.ModelSerializer):

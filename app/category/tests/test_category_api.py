@@ -12,7 +12,7 @@ from rest_framework.test import APIClient
 
 from core.models import Category, Product
 
-from category.serializers import CategorySerializer
+from category.serializers import CategorySerializer, CategoryDetailSerializer
 
 
 CATEGORIES_URL = reverse('category:category-list')
@@ -23,16 +23,16 @@ CATEGORIES_URL = reverse('category:category-list')
 #     return reverse('category:category-upload-image', args=[category_id])
 
 
-# def detail_url(category_id):
-#     """Return category detail URL"""
-#     return reverse('category:category-detail', args=[category_id])
+def detail_url(category_id):
+    """Return category detail URL"""
+    return reverse('category:category-detail', args=[category_id])
 
 
 
 
-# def sample_product(user, name='Cinnamon'):
-#     """Create and return a sample product"""
-#     return Product.objects.create(user=user, name=name)
+def sample_product(user, name='Cinnamon'):
+    """Create and return a sample product"""
+    return Product.objects.create(user=user, name=name, description='desc')
 
 
 def sample_category(user, **params):
@@ -78,9 +78,8 @@ class PrivateCategoryApiTests(TestCase):
 
         res = self.client.get(CATEGORIES_URL)
 
-        categories = Category.objects.all().order_by('-name')
+        categories = Category.objects.all().order_by('-id')
         serializer = CategorySerializer(categories, many=True)
-        print(serializer.data)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 2)
         self.assertEqual(res.data, serializer.data)
@@ -102,31 +101,31 @@ class PrivateCategoryApiTests(TestCase):
         self.assertEqual(len(res.data), 1)
         self.assertEqual(res.data, serializer.data)
 
-#     def test_view_category_detail(self):
-#         """Test viewing a category detail"""
-#         category = sample_category(user=self.user)
-#         category.tags.add(sample_tag(user=self.user))
-#         category.products.add(sample_product(user=self.user))
+    def test_view_category_detail(self):
+        """Test viewing a category detail"""
+        category = sample_category(user=self.user)
+        print(category)
+        category.products.add(sample_product(user=self.user))
+        category.products.add(sample_product(user=self.user))
 
-#         url = detail_url(category.id)
-#         res = self.client.get(url)
+        url = detail_url(category.id)
+        res = self.client.get(url)
 
-#         serializer = CategoryDetailSerializer(category)
-#         self.assertEqual(res.data, serializer.data)
+        serializer = CategoryDetailSerializer(category)
+        self.assertEqual(res.data, serializer.data)
 
-#     def test_create_basic_category(self):
-#         """Test creating category"""
-#         payload = {
-#             'title': 'Chocolate cheesecake',
-#             'time_minutes': 30,
-#             'price': 5.00
-#         }
-#         res = self.client.post(CATEGORIES_URL, payload)
+    def test_create_basic_category(self):
+        """Test creating category"""
+        payload = {
+            'name': 'Chocolate cheesecake',
+            'persian_title': 'persian'
+        }
+        res = self.client.post(CATEGORIES_URL, payload)
 
-#         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-#         category = Category.objects.get(id=res.data['id'])
-#         for key in payload.keys():
-#             self.assertEqual(payload[key], getattr(category, key))
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        category = Category.objects.get(id=res.data['id'])
+        for key in payload.keys():
+            self.assertEqual(payload[key], getattr(category, key))
 
 #     def test_create_category_with_tags(self):
 #         """Test creating a category with tags"""
@@ -147,59 +146,56 @@ class PrivateCategoryApiTests(TestCase):
 #         self.assertIn(tag1, tags)
 #         self.assertIn(tag2, tags)
 
-#     def test_create_category_with_products(self):
-#         """Test creating category with products"""
-#         product1 = sample_product(user=self.user, name='Prawns')
-#         product2 = sample_product(user=self.user, name='Ginger')
-#         payload = {
-#             'title': 'Thai prawn red curry',
-#             'products': [product1.id, product2.id],
-#             'time_minutes': 20,
-#             'price': 7.00
-#         }
-#         res = self.client.post(CATEGORIES_URL, payload)
+    def test_create_category_with_products(self):
+        """Test creating category with products"""
+        product1 = sample_product(user=self.user, name='Prawns')
+        product2 = sample_product(user=self.user, name='Ginger')
+        payload = {
+            'name': 'Thai prawn red curry',
+            'products': [product1.id, product2.id],
+            'persian_title': 'persian'
+        }
+        res = self.client.post(CATEGORIES_URL, payload)
 
-#         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-#         category = Category.objects.get(id=res.data['id'])
-#         products = category.products.all()
-#         self.assertEqual(products.count(), 2)
-#         self.assertIn(product1, products)
-#         self.assertIn(product2, products)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        category = Category.objects.get(id=res.data['id'])
+        products = category.products.all()
+        self.assertEqual(products.count(), 2)
+        self.assertIn(product1, products)
+        self.assertIn(product2, products)
 
-#     def test_partial_update_category(self):
-#         """Test updating a category with patch"""
-#         category = sample_category(user=self.user)
-#         category.tags.add(sample_tag(user=self.user))
-#         new_tag = sample_tag(user=self.user, name='Curry')
+    def test_partial_update_category(self):
+        """Test updating a category with patch"""
+        category = sample_category(user=self.user)
+        category.products.add(sample_product(user=self.user))
+        new_product = sample_product(user=self.user, name='Curry')
 
-#         payload = {'title': 'Chicken tikka', 'tags': [new_tag.id]}
-#         url = detail_url(category.id)
-#         self.client.patch(url, payload)
+        payload = {'name': 'Chicken tikka', 'products': [new_product.id]}
+        url = detail_url(category.id)
+        self.client.patch(url, payload)
 
-#         category.refresh_from_db()
-#         self.assertEqual(category.title, payload['title'])
-#         tags = category.tags.all()
-#         self.assertEqual(len(tags), 1)
-#         self.assertIn(new_tag, tags)
+        category.refresh_from_db()
+        self.assertEqual(category.name, payload['name'])
+        products = category.products.all()
+        self.assertEqual(len(products), 1)
+        self.assertIn(new_product, products)
 
-#     def test_full_update_category(self):
-#         """Test updating a category with put"""
-#         category = sample_category(user=self.user)
-#         category.tags.add(sample_tag(user=self.user))
-#         payload = {
-#             'title': 'Spaghetti carbonara',
-#             'time_minutes': 25,
-#             'price': 5.00
-#         }
-#         url = detail_url(category.id)
-#         self.client.put(url, payload)
+    def test_full_update_category(self):
+        """Test updating a category with put"""
+        category = sample_category(user=self.user)
+        category.products.add(sample_product(user=self.user))
+        payload = {
+            'name': 'Sample Category',
+            'persian_title': 'persian'
+        }
+        url = detail_url(category.id)
+        self.client.put(url, payload)
 
-#         category.refresh_from_db()
-#         self.assertEqual(category.title, payload['title'])
-#         self.assertEqual(category.time_minutes, payload['time_minutes'])
-#         self.assertEqual(category.price, payload['price'])
-#         tags = category.tags.all()
-#         self.assertEqual(len(tags), 0)
+        category.refresh_from_db()
+        self.assertEqual(category.name, payload['name'])
+        self.assertEqual(category.persian_title, payload['persian_title'])
+        products = category.products.all()
+        self.assertEqual(len(products), 0)
 
 
 # class CategoryImageUploadTests(TestCase):
