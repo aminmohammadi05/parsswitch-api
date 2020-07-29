@@ -6,6 +6,7 @@ from category import views
 
 router = DefaultRouter()
 router.register('products', views.ProductViewSet)
+router.register('categories', views.CategoryViewSet)
 
 app_name = 'category'
 

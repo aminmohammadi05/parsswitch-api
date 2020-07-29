@@ -5,6 +5,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
                                        PermissionsMixin
 from django.conf import settings
 
+
 def product_image_file_path(instance, filename):
     """Generate file path for new product image"""
     ext = filename.split('.')[-1]
@@ -42,10 +43,34 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'email'
 
+class Category(models.Model):
+    """Category object"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    name = models.CharField(max_length=255)
+    persian_title = models.CharField(max_length=255)
+    parent_category = models.ForeignKey(
+        'self'
+        ,null=True, blank=True,
+        on_delete=models.CASCADE
+    )
+    
+
+    def __str__(self):
+        return self.name
+
 class Product(models.Model):
     """Product existing in a category"""
     name = models.CharField(max_length=255)
+    description = models.CharField(max_length=2000)
     # image = models.ImageField(null=True, upload_to=product_image_file_path)
+    category = models.ForeignKey(
+        Category
+        ,null=False
+        ,on_delete=models.CASCADE
+    )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
@@ -55,15 +80,3 @@ class Product(models.Model):
         return self.name
 
 
-# class Category(models.Model):
-#     """Category object"""
-#     user = models.ForeignKey(
-#         settings.AUTH_USER_MODEL,
-#         on_delete=models.CASCADE
-#     )
-#     title = models.CharField(max_length=255)
-#     products = models.ManyToManyField('Product')
-    
-
-#     def __str__(self):
-#         return self.title

@@ -5,7 +5,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Product
+from core.models import Product, Category
 
 from category.serializers import ProductSerializer
 
@@ -39,8 +39,13 @@ class PrivateProductsApiTests(TestCase):
 
     def test_retrieve_product_list(self):
         """Test retrieving a list of products"""
-        Product.objects.create(user=self.user, name='Kale')
-        Product.objects.create(user=self.user, name='Salt')
+        category = Category.objects.create(
+            user=self.user,
+            name='HV',
+            persian_title='HV'
+        )
+        Product.objects.create(user=self.user, name='Kale', category=category, description='description')
+        Product.objects.create(user=self.user, name='Salt', category=category, description='description')
 
         res = self.client.get(PRODUCTS_URL)
 
@@ -55,8 +60,13 @@ class PrivateProductsApiTests(TestCase):
             'amin_mohammadi06@yahoo.com',
             '1234567aA'
         )
-        Product.objects.create(user=user2, name='Vinegar')
-        product = Product.objects.create(user=self.user, name='Tumeric')
+        category = Category.objects.create(
+            user=self.user,
+            name='HV',
+            persian_title='HV'
+        )
+        Product.objects.create(user=user2, name='Kale', category=category, description='description')
+        product = Product.objects.create(user=self.user, name='Tumeric', category=category, description='description')
 
         res = self.client.get(PRODUCTS_URL)
 
@@ -66,12 +76,15 @@ class PrivateProductsApiTests(TestCase):
 
     def test_create_product_successful(self):
         """Test create a new product"""
-        payload = {'name': 'Cabbage'}
+        category = Category.objects.create(user=self.user, name='MV')
+        payload = {'name': 'Cabbage', 'category': category.id, 'description': 'description', 'user': self.user}
         self.client.post(PRODUCTS_URL, payload)
-
+        
         exists = Product.objects.filter(
             user=self.user,
             name=payload['name'],
+            description='description',
+            category=category
         ).exists()
         self.assertTrue(exists)
 

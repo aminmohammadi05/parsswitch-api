@@ -49,21 +49,30 @@ class ModelTests(TestCase):
 
     def test_product_str(self):
         """Test the product string respresentation"""
+        user = sample_user()
+        category = models.Category.objects.create(
+            user=user,
+            name='HV',
+            persian_title='HV'
+        )
         product = models.Product.objects.create(
-            user=sample_user(),
-            name='FP'
+            user=user,
+            name='FP',
+            description='description',
+            category=category
         )
 
         self.assertEqual(str(product), product.name)
 
-    # def test_category_str(self):
-    #     """Test the category string representation"""
-    #     category = models.Category.objects.create(
-    #         user=sample_user(),
-    #         title='HV'
-    #     )
+    def test_category_str(self):
+        """Test the category string representation"""
+        category = models.Category.objects.create(
+            user=sample_user(),
+            name='HV',
+            persian_title='HV'
+        )
 
-    #     self.assertEqual(str(category), category.title)
+        self.assertEqual(str(category), category.name)
 
     # @patch('uuid.uuid4')
     # def test_product_file_name_uuid(self, mock_uuid):

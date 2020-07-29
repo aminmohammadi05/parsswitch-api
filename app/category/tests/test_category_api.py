@@ -1,21 +1,21 @@
-# import tempfile
-# import os
+import tempfile
+import os
 
-# from PIL import Image
+from PIL import Image
 
-# from django.contrib.auth import get_user_model
-# from django.test import TestCase
-# from django.urls import reverse
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+from django.urls import reverse
 
-# from rest_framework import status
-# from rest_framework.test import APIClient
+from rest_framework import status
+from rest_framework.test import APIClient
 
-# from core.models import Category, Product
+from core.models import Category, Product
 
-# from category.serializers import CategorySerializer, CategoryDetailSerializer
+from category.serializers import CategorySerializer
 
 
-# CATEGORIES_URL = reverse('category:category-list')
+CATEGORIES_URL = reverse('category:category-list')
 
 
 # def image_upload_url(category_id):
@@ -35,70 +35,72 @@
 #     return Product.objects.create(user=user, name=name)
 
 
-# def sample_category(user, **params):
-#     """Create and return a sample category"""
-#     defaults = {
-#         'title': 'Sample category',
-#         'time_minutes': 10,
-#         'price': 5.00
-#     }
-#     defaults.update(params)
+def sample_category(user, **params):
+    """Create and return a sample category"""
+    defaults = {
+        'name': 'Sample category',
+        'persian_title': 'persian',
+        'parent_category': None
+    }
+    defaults.update(params)
 
-#     return Category.objects.create(user=user, **defaults)
-
-
-# class PublicCategoryApiTests(TestCase):
-#     """Test unauthenticated category API access"""
-
-#     def setUp(self):
-#         self.client = APIClient()
-
-#     def test_auth_required(self):
-#         """Test that authentication is required"""
-#         res = self.client.get(CATEGORIES_URL)
-
-#         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+    return Category.objects.create(user=user, **defaults)
 
 
-# class PrivateCategoryApiTests(TestCase):
-#     """Test unauthenticated category API access"""
+class PublicCategoryApiTests(TestCase):
+    """Test unauthenticated category API access"""
 
-#     def setUp(self):
-#         self.client = APIClient()
-#         self.user = get_user_model().objects.create_user(
-#             'test@londonappdev.com',
-#             'testpass'
-#         )
-#         self.client.force_authenticate(self.user)
+    def setUp(self):
+        self.client = APIClient()
 
-#     def test_retrieve_categories(self):
-#         """Test retrieving a list of categories"""
-#         sample_category(user=self.user)
-#         sample_category(user=self.user)
+    def test_auth_required(self):
+        """Test that authentication is required"""
+        res = self.client.get(CATEGORIES_URL)
 
-#         res = self.client.get(CATEGORIES_URL)
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
-#         categories = Category.objects.all().order_by('-id')
-#         serializer = CategorySerializer(categories, many=True)
-#         self.assertEqual(res.status_code, status.HTTP_200_OK)
-#         self.assertEqual(res.data, serializer.data)
 
-#     def test_categories_limited_to_user(self):
-#         """Test retrieving categories for user"""
-#         user2 = get_user_model().objects.create_user(
-#             'other@londonappdev.com',
-#             'password123'
-#         )
-#         sample_category(user=user2)
-#         sample_category(user=self.user)
+class PrivateCategoryApiTests(TestCase):
+    """Test unauthenticated category API access"""
 
-#         res = self.client.get(CATEGORIES_URL)
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            'test@londonappdev.com',
+            'testpass'
+        )
+        self.client.force_authenticate(self.user)
 
-#         categories = Category.objects.filter(user=self.user)
-#         serializer = CategorySerializer(categories, many=True)
-#         self.assertEqual(res.status_code, status.HTTP_200_OK)
-#         self.assertEqual(len(res.data), 1)
-#         self.assertEqual(res.data, serializer.data)
+    def test_retrieve_categories(self):
+        """Test retrieving a list of categories"""
+        sample_category(user=self.user)
+        sample_category(user=self.user)
+
+        res = self.client.get(CATEGORIES_URL)
+
+        categories = Category.objects.all().order_by('-name')
+        serializer = CategorySerializer(categories, many=True)
+        print(serializer.data)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 2)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_categories_limited_to_user(self):
+        """Test retrieving categories for user"""
+        user2 = get_user_model().objects.create_user(
+            'other@londonappdev.com',
+            'password123'
+        )
+        sample_category(user=user2)
+        sample_category(user=self.user)
+
+        res = self.client.get(CATEGORIES_URL)
+
+        categories = Category.objects.filter(user=self.user)
+        serializer = CategorySerializer(categories, many=True)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+        self.assertEqual(res.data, serializer.data)
 
 #     def test_view_category_detail(self):
 #         """Test viewing a category detail"""
